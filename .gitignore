@@ -1,0 +1,7 @@
+# iIgnore tests
+tests
+vendor
+
+# PhpStorm
+.idea
+.phpunit.cache
