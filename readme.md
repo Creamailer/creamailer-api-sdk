@@ -1,4 +1,4 @@
-# Creamailer API v1 - PHP
+# Creamailer API - PHP
 
 The official PHP client library for the Creamailer API.
 
@@ -11,7 +11,7 @@ PHP 5.6 or above.
 You can install Creamailer API using Composer:
 
 ```
-composer require creamailer/creamailer-api-v1
+composer require creamailer/creamailer-api
 ```
 
 After installation:

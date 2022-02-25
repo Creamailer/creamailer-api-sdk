@@ -1,16 +1,19 @@
  {
-    "name": "creamailer/creamailer-api-v1",
-    "description": "Creamailer API v1.0",
-    "homepage": "https://github.com/creamailer/creamailer-api-v1",
+    "name": "creamailer/creamailer-api",
+    "description": "Creamailer API library for PHP",
+    "homepage": "https://github.com/creamailer/creamailer-api",
     "type": "library",
     "license": "MIT",
     "keywords": ["creamailer", "email", "surveys", "marketing"],
     "authors": [
         {
-            "name": "Jami Pietilä",
-            "email": "jami.pietila@creamailer.fi"
+            "name": "Creamailer Oy",
+            "email": "support@creamailer.fi"
         }
     ],
+    "require": {
+        "php" : ">=5.6"
+    },
     "require-dev": {
         "phpunit/phpunit": "^9.5"
     },
