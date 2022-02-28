@@ -11,7 +11,7 @@ class Creamailer extends TransferApi
 {
     protected $accessToken, $sharedSecret, $apiUrl;
 
-    public function __construct($accessToken, $sharedSecret, $apiUrl = 'https://api.creamailer.fi/v1/api/')
+    public function __construct($accessToken, $sharedSecret, $apiUrl = 'https://api.cmfile.net/v1/api/')
     {
         $this->sharedSecret = $sharedSecret;
         $this->accessToken = $accessToken;
