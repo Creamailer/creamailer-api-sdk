@@ -1,13 +1,13 @@
  {
-    "name": "creamailer/creamailer-api",
-    "description": "Creamailer API library for PHP",
-    "homepage": "https://github.com/creamailer/creamailer-api",
+    "name": "creamailer/creamailer-api-sdk",
+    "description": "Creamailer API SDK library for PHP",
+    "homepage": "https://github.com/creamailer/creamailer-api-sdk",
     "type": "library",
     "license": "MIT",
     "keywords": ["creamailer", "email", "surveys", "marketing"],
     "authors": [
         {
-            "name": "Creamailer Oy",
+            "name": "Creamailer",
             "email": "support@creamailer.fi"
         }
     ],

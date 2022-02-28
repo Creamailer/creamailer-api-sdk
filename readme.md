@@ -11,7 +11,7 @@ PHP 5.6 or above.
 You can install Creamailer API using Composer:
 
 ```
-composer require creamailer/creamailer-api
+composer require creamailer/creamailer-api-sdk
 ```
 
 After installation:
