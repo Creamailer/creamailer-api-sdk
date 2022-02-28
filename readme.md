@@ -54,7 +54,7 @@ $listName = 'My list';
 $listLanguage = 'fi';
 $listAutoSuppress = true;
 
-$result = $this->creamailer->lists()->create(
+$result = $creamailer->lists()->create(
     $listName,
     $listLanguage,
     $listAutoSuppress
@@ -67,7 +67,7 @@ print_r($result);
 ```
 $listId = 1234;
 
-$result = $this->creamailer->lists()->show(
+$result = $creamailer->lists()->show(
     $listId
 );
 
@@ -77,7 +77,7 @@ print_r($result);
 ### Get all lists
 
 ```
-$result = $this->creamailer->lists()->showMany();
+$result = $creamailer->lists()->showMany();
 
 print_r($result);
 ```
@@ -86,7 +86,7 @@ print_r($result);
 ```
 $listId = 1234;
 
-$result = $this->creamailer->lists()->subscribers(
+$result = $creamailer->lists()->subscribers(
     $listId
 );
 
@@ -100,7 +100,7 @@ $listName = 'My list';
 $listLanguage = 'fi';
 $listAutoSuppress = true;
 
-$result = $this->creamailer->lists()->update(
+$result = $creamailer->lists()->update(
     $listId,
     $listName,
     $listLanguage,
@@ -114,7 +114,7 @@ print_r($result);
 ```
 $listId = 1234;
 
-$result = $this->creamailer->lists()->delete(
+$result = $creamailer->lists()->delete(
     $listId = 1234
 );
 
@@ -126,17 +126,38 @@ print_r($result);
 $listId = 1234;
 $email = 'name@example.com';
 $name = 'Firstname Lastname';
+$company = 'Company Name';
+$address = 'Street 1';
+$city = 'Helsinki';
+$zip_code = '00100';
+$country = 'Finland';
+$phone = '040123456';
+$customer_number = '1234';
+$send_autoresponders = true;
+$send_autoresponders_if_exists = true;
+$status = 'active';
 
-$result = $this->creamailer->subscribers()->create(
+// If list has custom fields
+$some_custom_field = 'some extra info';
+
+$result = $creamailer->subscribers()->create(
     $listId,
     [
         'email' => $email,
         'name' => $name,
-        'send_autoresponders' => false,
-        'send_autoresponders_if_exists' => true,
-        'status' => 'active',
+        'company' => $company,
+        'address' => $address,
+        'company' => $company,
+        'city' => $city,
+        'zip_code' => $zip_code,
+        'country' => $country,
+        'phone' => $phone,
+        'customer_number' => $customer_number,
+        'send_autoresponders' => $send_autoresponders,
+        'send_autoresponders_if_exists' => $send_autoresponders_if_exists,
+        'status' => $status,
         'custom_fields' => [
-            'test' => 'text'
+            'some_custom_field' => $some_custom_field
         ]
     ]
 );
@@ -149,7 +170,7 @@ print_r($result);
 ```
 $listId = 1234;
 
-$result = $this->creamailer->lists()->delete(
+$result = $creamailer->lists()->delete(
     $listId = 1234
 );
 
@@ -162,7 +183,7 @@ $email = 'name@example.com';
 $name = 'Firstname Lastname';
 $status' => 'active',
 
-$result = $this->creamailer->subscribers()->update(
+$result = $creamailer->subscribers()->update(
     $listId,
     [
         'email' => $email,
@@ -178,7 +199,7 @@ print_r($result);
 $listId = 1234;
 $email = 'name@example.com';
 
-$result = $this->creamailer->subscribers()->delete(
+$result = $creamailer->subscribers()->delete(
     $listId,
     $email
 );
@@ -192,7 +213,7 @@ Add email to suppressions list.
 ```
 $email = 'name@example.com';
  
-$result = $this->creamailer->suppressions()->create(
+$result = $creamailer->suppressions()->create(
     $email
 );
 
@@ -200,7 +221,7 @@ print_r($result);
 ```
 ### Get all suppressions
 ```
-$result = $this->creamailer->suppressions()->show();
+$result = $creamailer->suppressions()->show();
  
 print_r($result);
 ```
@@ -209,7 +230,7 @@ Delete email from suppressions list.
 ```
 $email = 'name@example.com';
  
-$deleteResult = $this->creamailer->suppressions()->delete(
+$deleteResult = $creamailer->suppressions()->delete(
     $email
 );
 
