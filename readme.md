@@ -1,246 +1,265 @@
-# Creamailer API - PHP
+# Creamailer API SDK for PHP
 
-The official PHP client library for the Creamailer API.
+Official PHP SDK for the [Creamailer API v2](https://github.com/Creamailer/Creamailer-laravel/blob/master/docs/api-v2.md).
+
+Upgrading from v1? See [MIGRATION.md](MIGRATION.md). Release history: [CHANGELOG.md](CHANGELOG.md).
+
+## Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Getting Started](#getting-started)
+- [Authentication](#authentication)
+- [Access Levels & Rate Limiting](#access-levels--rate-limiting)
+- [Error Handling](#error-handling)
+- [Lists](#lists)
+- [Subscribers](#subscribers)
+- [Suppressions](#suppressions)
+- [Pagination](#pagination)
+- [Manual Testing Against a Live API](#manual-testing-against-a-live-api)
+- [Testing in Your App](#testing-in-your-app)
 
 ## Requirements
 
-PHP 5.6 or above.
+- PHP 8.0+
+- `ext-curl`, `ext-json`
 
 ## Installation
 
-You can install Creamailer API using Composer:
-
-```
+```bash
 composer require creamailer/creamailer-api-sdk
 ```
 
-After installation:
-* If your appliaction doesn't have autoloader, add it with line: ``require("vendor/autoload.php")``
+> **Note:** This SDK targets the Creamailer API **v2**. If you are still using the v1 API, pin the v1 SDK: `composer require creamailer/creamailer-api-sdk:^1.0`.
 
-## Examples
+## Getting Started
 
-To use the Creamailer API you need ``CREAMAILER_ACCESS_TOKEN`` and ``CREAMAILER_SHARED_SECRET``.
-You can obtain the keys by logging in to Creamailer and selecting: ``Username > Settings > API``.
+You need your `ACCESS_TOKEN` and `SHARED_SECRET` from Creamailer Settings → API.
 
-### Getting Started
+```php
+use Creamailer\Client;
 
-Start by use-ing the class and creating an instance with your API keys.
+$creamailer = new Client(
+    accessToken: getenv('CREAMAILER_ACCESS_TOKEN'),
+    sharedSecret: getenv('CREAMAILER_SHARED_SECRET'),
+);
 
-```
-use Creamailer\Creamailer;
-
-$creamailer = new Creamailer(YOUR_CREAMAILER_ACCESS_TOKEN, YOUR_CREAMAILER_SHARED_SECRET);
-```
-
-### Testing the Connection
-
-You can test connection with the ping method as below.
-
-```
 $result = $creamailer->ping();
+print_r($result); // ['message' => 'Connection successful.']
+```
 
-if ( ! $result->success) {
-    echo 'Error: ' . $result->message;
+## Authentication
+
+The SDK signs every request with HMAC-SHA256 and a ±5-minute timestamp window. No additional configuration is needed beyond your credentials.
+
+## Access Levels & Rate Limiting
+
+Each API key has an access level configured server-side:
+
+| Level | Permissions |
+|-------|-------------|
+| `read` | GET requests only — list/find/activity |
+| `write` | All requests — create, update, delete, import, suppression management |
+
+A `403 AuthorizationException` is thrown if a `read` key calls a write endpoint.
+
+**Rate limit:** 100 requests per hour per API key. When the limit is hit, the SDK throws `RateLimitException` (HTTP 429). Implement back-off in your integration:
+
+```php
+use Creamailer\Exceptions\RateLimitException;
+
+try {
+    $client->subscribers()->all($listId);
+} catch (RateLimitException $e) {
+    sleep(60); // back off and retry later
 }
+```
 
-print_r($result);
+## Error Handling
+
+Failed requests throw typed exceptions:
+
+| HTTP | Exception |
+|------|-----------|
+| 401  | `Creamailer\Exceptions\AuthenticationException` |
+| 403  | `Creamailer\Exceptions\AuthorizationException` |
+| 404  | `Creamailer\Exceptions\NotFoundException` |
+| 422  | `Creamailer\Exceptions\ValidationException` (see `->getErrors()`) |
+| 429  | `Creamailer\Exceptions\RateLimitException` |
+| 5xx  | `Creamailer\Exceptions\ServerException` |
+| network | `Creamailer\Exceptions\TransportException` |
+| other | `Creamailer\Exceptions\ApiException` |
+
+```php
+use Creamailer\Exceptions\ValidationException;
+
+try {
+    $creamailer->lists()->create(['name' => '']);
+} catch (ValidationException $e) {
+    foreach ($e->getErrors() as $field => $messages) {
+        echo "$field: ".implode(', ', $messages).PHP_EOL;
+    }
+}
 ```
 
 ## Lists
 
-### Create list
-```
-$listName = 'My list';
-$listLanguage = 'fi';
-$listAutoSuppress = true;
+```php
+// List all lists
+$creamailer->lists()->all();
 
-$result = $creamailer->lists()->create(
-    $listName,
-    $listLanguage,
-    $listAutoSuppress
-);
+// Get a single list
+$creamailer->lists()->get(123);
 
-print_r($result);
-```
+// Create
+$creamailer->lists()->create([
+    'name' => 'Monthly Newsletter',
+    'language' => 'fi',
+    'auto_suppress' => true,
+]);
 
-### Get list
-```
-$listId = 1234;
+// Update
+$creamailer->lists()->update(123, ['name' => 'Renamed']);
 
-$result = $creamailer->lists()->show(
-    $listId
-);
+// Delete
+$creamailer->lists()->delete(123);
 
-print_r($result);
+// Get custom fields defined on the list
+$creamailer->lists()->fields(123);
 ```
 
-### Get all lists
-
-```
-$result = $creamailer->lists()->showMany();
-
-print_r($result);
-```
-
-### Get list subscribers
-```
-$listId = 1234;
-
-$result = $creamailer->lists()->subscribers(
-    $listId
-);
-
-print_r($result);
-```
-
-### Update list
-```
-$listId = 1234;
-$listName = 'My list';
-$listLanguage = 'fi';
-$listAutoSuppress = true;
-
-$result = $creamailer->lists()->update(
-    $listId,
-    $listName,
-    $listLanguage,
-    $listAutoSuppress
-);
-
-print_r($result);
-```
-
-### Delete list
-```
-$listId = 1234;
-
-$result = $creamailer->lists()->delete(
-    $listId = 1234
-);
-
-print_r($result);
-```
 ## Subscribers
-###  Create subscriber
+
+```php
+// List subscribers (with optional filters)
+$creamailer->subscribers()->all(123, [
+    'status' => 'active',    // all, active, unsubscribed, bounced, spamreport, deleted
+    'pagesize' => 100,
+    'page' => 1,
+    'date' => '2024-01-01',  // joined after this date
+]);
+
+// Find one subscriber by email
+$creamailer->subscribers()->find(123, 'subscriber@example.com');
+
+// Create
+$creamailer->subscribers()->create(123, [
+    'email' => 'new@example.com',
+    'name' => 'Jane Smith',
+    'company' => 'Acme Inc',
+    'send_autoresponders' => true,
+    'custom_fields' => [
+        'department' => 'Marketing',
+    ],
+]);
+
+// Update (use 'new_email' to change the email itself)
+$creamailer->subscribers()->update(123, [
+    'email' => 'old@example.com',
+    'new_email' => 'new@example.com',
+    'name' => 'Updated Name',
+]);
+
+// Delete (unsubscribe)
+$creamailer->subscribers()->delete(123, 'subscriber@example.com');
+
+// Bulk import (max 500 per call)
+$creamailer->subscribers()->import(123, [
+    ['email' => 'a@example.com', 'name' => 'A'],
+    ['email' => 'b@example.com', 'name' => 'B', 'update_existing' => true],
+]);
+
+// Subscriber activity across all lists (CRM integration)
+$creamailer->subscribers()->activity('subscriber@example.com', pagesize: 20);
 ```
-$listId = 1234;
-$email = 'name@example.com';
-$name = 'Firstname Lastname';
-$company = 'Company Name';
-$address = 'Street 1';
-$city = 'Helsinki';
-$zip_code = '00100';
-$country = 'Finland';
-$phone = '040123456';
-$customer_number = '1234';
-$send_autoresponders = true;
-$send_autoresponders_if_exists = true;
-$status = 'active';
 
-// If list has custom fields
-$some_custom_field = 'some extra info';
-
-$result = $creamailer->subscribers()->create(
-    $listId,
-    [
-        'email' => $email,
-        'name' => $name,
-        'company' => $company,
-        'address' => $address,
-        'company' => $company,
-        'city' => $city,
-        'zip_code' => $zip_code,
-        'country' => $country,
-        'phone' => $phone,
-        'customer_number' => $customer_number,
-        'send_autoresponders' => $send_autoresponders,
-        'send_autoresponders_if_exists' => $send_autoresponders_if_exists,
-        'status' => $status,
-        'custom_fields' => [
-            'some_custom_field' => $some_custom_field
-        ]
-    ]
-);
-
-print_r($result);
-```
-**Note:** Use custom_fields only if they exists on the list.
-
-### Get subscriber
-```
-$listId = 1234;
-
-$result = $creamailer->lists()->delete(
-    $listId = 1234
-);
-
-print_r($result);
-```
-### Update subscriber
-```
-$listId = 1234;
-$email = 'name@example.com';
-$name = 'Firstname Lastname';
-$status' => 'active',
-
-$result = $creamailer->subscribers()->update(
-    $listId,
-    [
-        'email' => $email,
-        'name' => $name,
-        'status' => status
-    ]
-);
-
-print_r($result);
-```
-### Delete subscriber
-```
-$listId = 1234;
-$email = 'name@example.com';
-
-$result = $creamailer->subscribers()->delete(
-    $listId,
-    $email
-);
-
-print_r($result);
-```
 ## Suppressions
 
-### Create suppression
-Add email to suppressions list.
-```
-$email = 'name@example.com';
- 
-$result = $creamailer->suppressions()->create(
-    $email
-);
+```php
+// List suppressions
+$creamailer->suppressions()->all(pagesize: 200);
 
-print_r($result);
-```
-### Get all suppressions
-```
-$result = $creamailer->suppressions()->show();
- 
-print_r($result);
-```
-### Delete suppression
-Delete email from suppressions list.
-```
-$email = 'name@example.com';
- 
-$deleteResult = $creamailer->suppressions()->delete(
-    $email
-);
+// Add suppression
+$creamailer->suppressions()->create('blocked@example.com');
 
-print_r($result);
+// Remove suppression
+$creamailer->suppressions()->delete('blocked@example.com');
 ```
 
-## Support and Feedback
+## Pagination
 
-In case you find any bugs, submit an issue directly here in GitHub.
+Collection endpoints (`subscribers()->all()`, `subscribers()->activity()`, `suppressions()->all()`) return Laravel-style paginated responses. Pass `page` and `pagesize` (max 1000) and iterate:
 
-Also for future improvement requests, please rise an issue so we can discuss it further.
+```php
+$page = 1;
 
-We do PHPUnit unit tests with this library, but since it's an API, we don't release the tests. We don't recommend anyone to run tests agains our public API address.
+do {
+    $response = $client->subscribers()->all($listId, [
+        'pagesize' => 500,
+        'page' => $page,
+    ]);
+
+    foreach ($response['data'] as $subscriber) {
+        // ... process row
+    }
+
+    $lastPage = $response['meta']['last_page'] ?? 1;
+    $page++;
+} while ($page <= $lastPage);
+```
+
+Each response also includes `links.next` (or `null` on the last page) if you prefer to walk by URL.
+
+## Manual Testing Against a Live API
+
+The repo includes [`examples/live-test.php`](examples/live-test.php) for poking at a real API instance (production or development). Set credentials and base URL via env vars, then run individual commands:
+
+```bash
+export CREAMAILER_ACCESS_TOKEN=your-dev-token
+export CREAMAILER_SHARED_SECRET=your-dev-secret
+export CREAMAILER_BASE_URL=https://api.creadevelopment.net
+
+# Quick connectivity check
+php examples/live-test.php ping
+
+# Read-only smoke test (ping + first list + first 3 subscribers + suppressions)
+php examples/live-test.php all
+
+# Individual endpoints
+php examples/live-test.php lists
+php examples/live-test.php list-get 123
+php examples/live-test.php subscribers 123
+php examples/live-test.php subscriber-create 123 test@example.com "Test User"
+php examples/live-test.php activity test@example.com
+```
+
+Run `php examples/live-test.php` without arguments to see the full command list.
+
+> **Important:** The HMAC signature is computed using the base URL the SDK uses. It must match the `EXTERNAL_API_BASE_URL` configured on the server — otherwise signatures won't match and you'll get `401`. The SDK trims a trailing slash from the configured base URL, so set the server env var **without** a trailing slash (e.g. `EXTERNAL_API_BASE_URL=https://api.creadevelopment.net`, not `.../`).
+
+## Testing in Your App
+
+The SDK uses a `Transport` interface internally, so you can swap in a fake transport in your tests:
+
+```php
+use Creamailer\Client;
+use Creamailer\Http\Transport;
+
+class StubTransport implements Transport
+{
+    public function send(string $method, string $url, array $headers, string $body): array
+    {
+        return ['status' => 200, 'body' => '{"data": []}'];
+    }
+}
+
+$client = new Client('token', 'secret', 'https://api.cmfile.net', new StubTransport);
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Support
+
+Report issues at [github.com/Creamailer/creamailer-api-sdk/issues](https://github.com/Creamailer/creamailer-api-sdk/issues).

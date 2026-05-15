@@ -1,7 +1,6 @@
-# iIgnore tests
-tests
-vendor
+vendor/
+composer.lock
 
-# PhpStorm
-.idea
-.phpunit.cache
+.idea/
+.phpunit.cache/
+.phpunit.result.cache
