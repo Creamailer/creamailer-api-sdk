@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] — 2026-05-15
+
+### Documentation
+
+- Dedicated **Subscriber Activity (CRM Integration)** section in the README with full response-shape example and an explanation of `web_version_url`.
+- Removed internal development URLs from the README and `examples/live-test.php`. Default base URL is now `https://api.cmfile.net` everywhere.
+
+No code changes — same package as 2.0.0.
+
 ## [2.0.0] — 2026-05-15
 
 **This is a major rewrite targeting Creamailer API v2.** See [MIGRATION.md](MIGRATION.md) for a v1 → v2 upgrade guide. If you are still calling the legacy `/v1/api/*` endpoints, stay on `^1.0`.
