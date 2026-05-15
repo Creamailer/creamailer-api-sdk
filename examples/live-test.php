@@ -8,8 +8,10 @@ declare(strict_types=1);
  * Usage:
  *   CREAMAILER_ACCESS_TOKEN=xxx \
  *   CREAMAILER_SHARED_SECRET=yyy \
- *   CREAMAILER_BASE_URL=https://api.creadevelopment.net \
  *   php examples/live-test.php <command> [args...]
+ *
+ * Base URL defaults to https://api.cmfile.net. Override with
+ * CREAMAILER_BASE_URL if needed.
  *
  * Commands:
  *   ping
@@ -40,7 +42,7 @@ use Creamailer\Exceptions\ValidationException;
 
 $accessToken = getenv('CREAMAILER_ACCESS_TOKEN') ?: null;
 $sharedSecret = getenv('CREAMAILER_SHARED_SECRET') ?: null;
-$baseUrl = getenv('CREAMAILER_BASE_URL') ?: 'https://api.creadevelopment.net';
+$baseUrl = getenv('CREAMAILER_BASE_URL') ?: 'https://api.cmfile.net';
 
 if (! $accessToken || ! $sharedSecret) {
     fwrite(STDERR, "Missing CREAMAILER_ACCESS_TOKEN or CREAMAILER_SHARED_SECRET env vars.\n");

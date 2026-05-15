@@ -14,6 +14,7 @@ Upgrading from v1? See [MIGRATION.md](MIGRATION.md). Release history: [CHANGELOG
 - [Error Handling](#error-handling)
 - [Lists](#lists)
 - [Subscribers](#subscribers)
+- [Subscriber Activity (CRM Integration)](#subscriber-activity-crm-integration)
 - [Suppressions](#suppressions)
 - [Pagination](#pagination)
 - [Manual Testing Against a Live API](#manual-testing-against-a-live-api)
@@ -168,10 +169,58 @@ $creamailer->subscribers()->import(123, [
     ['email' => 'a@example.com', 'name' => 'A'],
     ['email' => 'b@example.com', 'name' => 'B', 'update_existing' => true],
 ]);
-
-// Subscriber activity across all lists (CRM integration)
-$creamailer->subscribers()->activity('subscriber@example.com', pagesize: 20);
 ```
+
+## Subscriber Activity (CRM Integration)
+
+Retrieve a contact's full message history across **all your lists** — every campaign they received, opens, clicks, bounces, unsubscribes, and a direct browser-viewable link to each email. Ideal for showing email engagement timelines inside your CRM.
+
+```php
+$activity = $creamailer->subscribers()->activity('contact@example.com', pagesize: 20);
+```
+
+### Response shape
+
+```php
+[
+    'data' => [
+        'email' => 'contact@example.com',
+        'summary' => [
+            'total_messages'     => 46,
+            'total_opens'        => 37,
+            'total_clicks'       => 53,
+            'total_bounces'      => 0,
+            'total_unsubscribes' => 3,
+            'first_message_date' => '2021-06-06 17:43:17',
+        ],
+        'messages' => [
+            'current_page' => 1,
+            'last_page'    => 10,
+            'data' => [
+                [
+                    'campaign_name'   => 'March Newsletter',
+                    'subject'         => 'Our March Update',
+                    'sender_name'     => 'Acme Inc',
+                    'sender_email'    => 'news@acme.com',
+                    'sent_date'       => '2025-03-01 09:00:00',
+                    'opens'           => 3,
+                    'clicks'          => [
+                        ['url' => 'https://example.com/offer', 'count' => 2],
+                    ],
+                    'web_version_url' => 'https://acme.creamailer.fi/email/abc1234567890',
+                ],
+                // ...
+            ],
+        ],
+    ],
+]
+```
+
+### Why this matters
+
+`web_version_url` links are **publicly accessible** (no authentication needed) and render the exact email content the contact received. Embed them in your CRM record so support staff can preview the email a customer is asking about.
+
+The endpoint is paginated — see [Pagination](#pagination) for how to walk all pages.
 
 ## Suppressions
 
@@ -212,12 +261,11 @@ Each response also includes `links.next` (or `null` on the last page) if you pre
 
 ## Manual Testing Against a Live API
 
-The repo includes [`examples/live-test.php`](examples/live-test.php) for poking at a real API instance (production or development). Set credentials and base URL via env vars, then run individual commands:
+The repo includes [`examples/live-test.php`](examples/live-test.php) for poking at a real API instance. Set credentials via env vars (base URL defaults to `https://api.cmfile.net`), then run individual commands:
 
 ```bash
-export CREAMAILER_ACCESS_TOKEN=your-dev-token
-export CREAMAILER_SHARED_SECRET=your-dev-secret
-export CREAMAILER_BASE_URL=https://api.creadevelopment.net
+export CREAMAILER_ACCESS_TOKEN=your-access-token
+export CREAMAILER_SHARED_SECRET=your-shared-secret
 
 # Quick connectivity check
 php examples/live-test.php ping
@@ -234,8 +282,6 @@ php examples/live-test.php activity test@example.com
 ```
 
 Run `php examples/live-test.php` without arguments to see the full command list.
-
-> **Important:** The HMAC signature is computed using the base URL the SDK uses. It must match the `EXTERNAL_API_BASE_URL` configured on the server — otherwise signatures won't match and you'll get `401`. The SDK trims a trailing slash from the configured base URL, so set the server env var **without** a trailing slash (e.g. `EXTERNAL_API_BASE_URL=https://api.creadevelopment.net`, not `.../`).
 
 ## Testing in Your App
 
